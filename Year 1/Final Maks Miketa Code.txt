@@ -1,0 +1,146 @@
+/*
+  Traffic Light Controller Maks Miketa
+*/
+
+//Library that allows arduino to control the LCD
+#include <LiquidCrystal.h>
+//Pins selected for LCD
+LiquidCrystal lcd = LiquidCrystal(2, 3, 4, 5, 6, 7); 
+
+//variables cant be modified as they're constant
+const int triggerPin = 9;
+const int echoPin = 1;
+ 
+float distance = 0;
+int light = 0;
+
+//Code for Distance Sensor
+long readUltrasonicDistance(int triggerPin, int echoPin)
+{
+  pinMode(triggerPin, OUTPUT);  // Clear the trigger
+  digitalWrite(triggerPin, LOW);
+  delayMicroseconds(2);
+  // Sets the trigger pin to HIGH state for 10 microseconds
+  digitalWrite(triggerPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(triggerPin, LOW);
+  pinMode(echoPin, INPUT);
+  // Reads the echo pin, and returns the sound wave travel time in microseconds
+  return pulseIn(echoPin, HIGH);
+}
+
+int counter;
+
+void setup()
+{
+  pinMode(A0, INPUT);
+  pinMode(13, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(11, OUTPUT);
+  pinMode(8, OUTPUT);
+  lcd.begin(16, 2); // Specifies the LCD's number of columns and rows.
+  pinMode(triggerPin, OUTPUT);  
+  pinMode(echoPin, INPUT);
+}
+
+//functions
+void redLED()
+{
+  digitalWrite(13, HIGH);
+  digitalWrite(12, LOW);
+  digitalWrite(11, LOW);
+}
+
+void yellowLED()
+{
+  digitalWrite(13, LOW);
+  digitalWrite(12, HIGH);
+  digitalWrite(11, LOW);
+}
+
+void greenLED()
+{
+  digitalWrite(13, LOW);
+  digitalWrite(12, LOW);
+  digitalWrite(11, HIGH);
+}
+
+void trafficLEDoff()
+{
+  digitalWrite(13, LOW);
+  digitalWrite(12, LOW);
+  digitalWrite(11, LOW);
+}
+
+void sensorVariables()
+{
+  light = analogRead(A0);
+  distance = 0.01723 * readUltrasonicDistance(9, 1); 
+  //CM reading
+}
+
+void LCDdisplay()
+{
+  lcd.setCursor(0,0);
+  lcd.print("Distance in CM:");
+  lcd.setCursor(0,1);
+  lcd.print(distance);
+}
+
+void loop()
+{
+  // LCD Display
+  LCDdisplay();
+  sensorVariables();
+  // Night Mode
+  if (light < 200) {
+    // Red LED turns on if distance is below 200cm
+    redLED();
+    if (distance < 20) {
+      // Green LED turns on if distance is less than 20cm
+      greenLED();
+    } else {
+      // RED LED turns back on if distance is greater than 20
+      redLED();
+    }
+  } else {
+    // Pedestrian Mode
+    if (distance < 10) {
+      if (counter < 10) { //Counts to 10 then stops
+        // Buzzer playing if distance is less than 10cm
+        tone(8, 294,150); // play tone 50 (D4 = 294 Hz)
+        // Repeats yellow LED 10 times for 0.1 seconds
+        yellowLED();
+        delay(100); // Wait for 100 millisecond(s)
+        trafficLEDoff();
+        delay(100); // Wait for 100 millisecond(s)
+        counter = counter + 1;
+      }
+      // Regular Mode
+    } else {
+      counter = 0;
+      // Red LED only
+      redLED();
+      delay(2000); // Wait for 2 seconds
+      // Yellow LED only
+      yellowLED();
+      delay(1000); // Wait for 1 second
+      // Green LED only
+      greenLED();
+      delay(2000); // Wait for 2 seconds
+      // Yellow LED only
+      yellowLED();
+      delay(1000); // Wait for 1 second
+    }
+  }
+}
+
+I, Maks Miketa (N0945100) hereby declare that I am the sole author of the arduino project.
+
+I am aware of the University’s rules on plagiarism and collusion and I understand that, if I am found to have broken these rules, it will be treated as Academic Misconduct and dealt with accordingly.
+
+I understand that I must submit this coursework by the time and date published.  
+
+I understand that it is entirely my responsibility to ensure that I submit my full and complete coursework and that any missing elements submitted after the deadline will be disregarded.
+
+I understand that the above rules apply even in the eventuality of computer or other information technology failures.
